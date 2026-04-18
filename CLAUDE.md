@@ -20,30 +20,28 @@ S3 (parsed .txt emails)
 ## Commands
 
 ```bash
-# Parse emails (CSV → .txt files in data/parsed/)
+# Provision S3 bucket
+bash infra/setup.sh
+
+# Parse emails (CSV → sharded .txt files in data/parsed/)
 python pipeline/parse_emails.py
 
-# Upload parsed emails to S3
+# Upload parsed emails to S3 (run from EC2 for speed)
 python pipeline/uploadtos3.py
 
 # Run frontend locally
-cd frontend && streamlit run app.py
+API_URL=https://<api-id>.execute-api.us-east-1.amazonaws.com/ask streamlit run frontend/app.py
 
 # Deploy Lambda
 cd backend && zip function.zip lambda_function.py
 aws lambda update-function-code --function-name enron-query --zip-file fileb://function.zip
-
-# Sync emails to S3
-aws s3 sync data/parsed/ s3://enron-org-memory/emails/
-
-# Provision AWS resources
-bash infra/setup.sh
 ```
 
 ## Data Pipeline
 
-**`pipeline/parse_emails.py`** — reads `data/emails.csv` (columns: `file`, `message`). The `message` column is raw RFC 2822 format — parse with Python's `email` module. Extracts From/To/Date/Subject/Body, drops duplicates and empty bodies. Limit output to 20k–50k files (more = KB sync too slow). Output format per file:
+**`pipeline/parse_emails.py`** — reads `data/raw/emails.csv` (columns: `file`, `message`). Streams in 10k-row chunks via `pd.read_csv(chunksize=10_000)` to keep memory bounded. Parses each `message` with Python's `email` module, extracts From/To/Date/Subject/Body (walks multipart for `text/plain`), drops empty bodies, and deduplicates on MD5 body hash (~30–40% of Enron corpus are sent/received duplicates). Writes to `data/parsed/{idx//5000}/email_{idx}.txt` (sharded, ≤5k files per dir). Checkpoints progress to `data/parsed/.progress.json` every chunk — restartable after interruption. Expected output: ~300k–350k files.
 
+Output format per file:
 ```
 From: <sender>
 To: <recipient>
@@ -53,7 +51,7 @@ Subject: <subject>
 <body>
 ```
 
-**`pipeline/uploadtos3.py`** — uploads `data/parsed/` to `s3://enron-org-memory/emails/` using `concurrent.futures.ThreadPoolExecutor` for speed.
+**`pipeline/uploadtos3.py`** — uploads `data/parsed/` to `s3://enron-org-memory/emails/` using `ThreadPoolExecutor(64)` + `botocore.config.Config(max_pool_connections=64)`. Lists existing S3 keys at startup and skips already-uploaded files (idempotent reruns). Run from EC2 in `us-east-1` for multi-Gbps throughput; 500k PUTs from a home connection takes hours.
 
 ## Backend
 
@@ -100,5 +98,7 @@ requests
 ## Timing Notes
 
 - OpenSearch Serverless collection creation: 10–20 min
-- Bedrock KB sync for 50k docs: 30–60 min
+- Bedrock KB sync: ~30–60 min per 50k docs → full ~350k corpus = 3–7 hours
 - Bedrock `retrieve_and_generate` per query: 5–10 sec → Lambda timeout must be 30s
+- Parse pipeline (~500k rows): 5–15 min locally
+- S3 upload from EC2 (64-way concurrency): ~5–10 min; from home: hours

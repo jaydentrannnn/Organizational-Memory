@@ -1,52 +1,50 @@
-# Copilot Instructions — Organizational Memory
+# Copilot Instructions - Organizational Memory
 
 ## Build, test, and lint commands
 
-There is no configured test or lint framework in the current repository state (`pytest`, `ruff`, `flake8`, etc. are not present).
+There is currently no configured automated test or lint framework in this repository.
 
-Use the documented run/deploy commands from `CLAUDE.md`:
+Use the project run/deploy commands from `CLAUDE.md`:
 
 ```bash
-# Parse Enron CSV into individual text emails
+# (Optional) Download Enron dataset to data/raw/
+python data/download.py
+
+# Parse raw CSV into sharded text files in data/parsed/
 python pipeline/parse_emails.py
 
-# Upload parsed emails to S3
+# Upload parsed files to S3
 python pipeline/uploadtos3.py
 
-# Run Streamlit frontend locally
-cd frontend && streamlit run app.py
+# Provision S3 bucket and public-access-block settings
+bash infra/setup.sh
 
-# Package and deploy Lambda code
+# Run Streamlit frontend locally
+API_URL=https://<api-id>.execute-api.us-east-1.amazonaws.com/ask streamlit run frontend/app.py
+
+# Package/deploy Lambda code
 cd backend && zip function.zip lambda_function.py
 aws lambda update-function-code --function-name enron-query --zip-file fileb://function.zip
-
-# Sync local parsed emails to S3
-aws s3 sync data/parsed/ s3://enron-org-memory/emails/
-
-# Provision AWS resources
-bash infra/setup.sh
 ```
 
-Single-test command: not applicable (no test suite configured yet).
+Single-test command: not applicable (no test suite exists yet).
 
 ## High-level architecture
 
-This project is a retrieval-augmented "organizational memory" system for Enron emails:
+This project implements an AWS-based retrieval workflow for Enron emails:
 
-1. `pipeline/parse_emails.py` transforms `data/emails.csv` (`file`, `message`) into one `.txt` email per document in `data/parsed/`.
-2. `pipeline/uploadtos3.py` uploads those documents to S3 (`emails/` prefix).
-3. Bedrock Knowledge Base ingests from S3 and stores embeddings in OpenSearch Serverless (Titan Embeddings v2).
-4. `backend/lambda_function.py` receives `{"question": "..."}` and calls Bedrock `retrieve_and_generate`.
-5. API Gateway exposes `POST /ask` for the Lambda.
-6. `frontend/app.py` sends user questions to the API and renders answer + source citations.
+1. `data/download.py` fetches the Kaggle Enron dataset into `data/raw/`.
+2. `pipeline/parse_emails.py` reads `data/raw/emails.csv` in chunks, parses message headers/body, deduplicates by body hash, and writes one `.txt` email per document into sharded folders under `data/parsed/`, with resume state in `data/parsed/.progress.json`.
+3. `pipeline/uploadtos3.py` uploads `data/parsed/` to `s3://enron-org-memory/emails/` using 64-way concurrency and skips keys that already exist in S3.
+4. The intended serving path (documented in `CLAUDE.md`) is S3 -> Bedrock Knowledge Base (Titan Embeddings v2 + OpenSearch Serverless) -> Lambda/API Gateway -> Streamlit UI.
 
 ## Key repository conventions
 
-- Keep all AWS interactions in `boto3` (no LangChain abstraction layer).
-- Prefer function-based Python modules; avoid adding classes unless clearly needed.
-- Use `logging` in backend/frontend code, but `print` is acceptable for pipeline progress scripts.
-- Required env vars across components: `KB_ID`, `AWS_REGION`, `S3_BUCKET`, `API_URL`.
-- AWS defaults for this project: `us-east-1`, Lambda runtime `python3.11`, timeout `30s`, memory `256MB`, API Gateway HTTP API with permissive CORS (`*`) for demo use.
-- Retrieval responses should include source citations and truncate source snippets to ~500 chars.
-- Treat this as a hackathon demo scope: do not add Cognito/auth, FAISS, CloudFormation/CDK, or PII scrubbing unless explicitly requested.
-- File naming note: the current uploader script in this repo is `pipeline/uploadtos3.py` (no underscore).
+- Keep AWS integrations in `boto3`; do not introduce LangChain wrappers.
+- Prefer function-based Python modules over class-heavy designs.
+- Use `print` for progress in pipeline scripts; use `logging` for backend/frontend services.
+- Preserve the parser output contract exactly (`From/To/Date/Subject` header block followed by body text) because downstream retrieval indexing depends on this shape.
+- Preserve parser scaling patterns: chunked CSV reads (`chunksize=10_000`), directory sharding (`idx // 5000`), and checkpointing via `.progress.json` for resumable runs.
+- Preserve uploader idempotency and throughput patterns: pre-list S3 keys, skip existing objects, and use `ThreadPoolExecutor(64)` with matching S3 connection pooling.
+- Keep demo scope constraints from `CLAUDE.md`: no Cognito/auth layer, no FAISS, no CloudFormation/CDK, and no PII scrubbing unless explicitly requested.
+- AWS defaults assumed across docs/scripts: `us-east-1`, Lambda `python3.11`, 30s timeout, 256 MB memory, permissive CORS for demo API.

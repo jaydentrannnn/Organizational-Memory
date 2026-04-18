@@ -1,0 +1,15 @@
+data/raw/
+data/parsed/
+data/*.csv
+data/parsed/.progress.json
+*.zip
+backend/function.zip
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.idea/
