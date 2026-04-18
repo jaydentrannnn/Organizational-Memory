@@ -38,10 +38,11 @@
 
       style C fill:#FF9900,color:#000
       style D fill:#FF9900,color:#000
-      style E fill:#FF9900,color:#000
-      style F fill:#FF9900,color:#000
-      style G fill:#FF9900,color:#000
-      style H fill:#FF9900,color:#000
+  style E fill:#FF9900,color:#000
+  style F fill:#FF9900,color:#000
+  style G fill:#FF9900,color:#000
+  style H fill:#FF9900,color:#000
+  ```
 
   AWS Services Used (11)
 
