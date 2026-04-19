@@ -5,7 +5,7 @@ from pathlib import Path
 import boto3
 from botocore.config import Config
 
-BUCKET = "enron-org-memory"
+BUCKET = "enron-org-memory-data"
 PREFIX = "emails/"
 
 

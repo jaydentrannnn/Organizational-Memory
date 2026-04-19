@@ -18,12 +18,14 @@ st.set_page_config(page_title="Organizational Memory", page_icon="🧠")
 st.title("🧠 Organizational Memory")
 st.caption("Ask natural-language questions about the Enron email corpus — powered by Amazon Bedrock")
 
-# --- example question buttons ---
+# --- example question buttons (auto-submit on click) ---
 st.markdown("**Try an example:**")
 cols = st.columns(2)
 for i, ex in enumerate(EXAMPLES):
     if cols[i % 2].button(ex, key=f"ex{i}", use_container_width=True):
         st.session_state["question"] = ex
+        st.session_state["auto_submit"] = True
+        st.rerun()
 
 question: str = st.text_input(
     "Your question",
@@ -34,14 +36,15 @@ question: str = st.text_input(
 
 def call_api(q: str) -> dict:
     """POST the question to the backend and return parsed JSON."""
-    resp = requests.post(API_URL, json={"question": q}, timeout=35)
+    resp = requests.post(API_URL, json={"question": q}, timeout=55)
     resp.raise_for_status()
     return resp.json()
 
 
-if st.button("Ask", type="primary", disabled=not question.strip()):
+auto = st.session_state.pop("auto_submit", False)
+if auto or st.button("Ask", type="primary", disabled=not question.strip()):
     if not API_URL:
-        st.error("Set the `API_URL` env var, e.g. `API_URL=https://xxx.execute-api.us-east-1.amazonaws.com/ask streamlit run frontend/app.py`")
+        st.error("Set the `API_URL` env var, e.g. `API_URL=https://xxx.execute-api.us-west-2.amazonaws.com/ask streamlit run frontend/app.py`")
     else:
         with st.spinner("Searching organizational memory…"):
             try:
@@ -56,6 +59,8 @@ if st.button("Ask", type="primary", disabled=not question.strip()):
                 code = exc.response.status_code if exc.response is not None else 0
                 if code == 429:
                     st.warning("Rate limited — wait a moment and retry.")
+                    if st.button("Retry"):
+                        st.rerun()
                 else:
                     try:
                         body = exc.response.json()

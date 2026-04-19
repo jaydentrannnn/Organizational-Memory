@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REGION="us-east-1"
-BUCKET="enron-org-memory"
+REGION="us-west-2"
+BUCKET="enron-org-memory-data"
 
 if command -v aws >/dev/null 2>&1; then
   AWS_CLI="aws"

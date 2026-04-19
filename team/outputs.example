@@ -1,12 +1,12 @@
 # Shared outputs — copy to team/outputs.env and fill in as resources are created.
 # Do NOT commit outputs.env (it is gitignored).
 
-AWS_REGION=us-east-1
-S3_BUCKET=enron-org-memory
+AWS_REGION=us-west-2
+S3_BUCKET=enron-org-memory-data
 S3_PREFIX=emails/
 
 # Person 1 fills these after KB creation
-KNOWLEDGE_BASE_ID=
+KNOWLEDGE_BASE_ID=RW2OWNITJR
 # AGENT_ID=              # Only if using Option B
 # AGENT_ALIAS_ID=        # Only if using Option B
 

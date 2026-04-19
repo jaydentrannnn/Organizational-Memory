@@ -15,7 +15,7 @@ set -euo pipefail
 
 ROLE_NAME="${ROLE_NAME:-enron-query-lambda-role}"
 POLICY_NAME="${POLICY_NAME:-enron-query-lambda-policy}"
-REGION="${AWS_REGION:-us-east-1}"
+REGION="${AWS_REGION:-us-west-2}"
 
 if command -v aws >/dev/null 2>&1; then
   AWS_CLI="aws"

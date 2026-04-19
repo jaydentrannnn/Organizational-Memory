@@ -11,7 +11,7 @@ Hackathon project demonstrating "Organizational Memory" — passive ingestion of
 ```
 S3 (parsed .txt emails)
   → Bedrock Knowledge Base (Titan Embeddings v2 + OpenSearch Serverless vector store)
-  → Bedrock Agent (Claude 3 Sonnet, retrieve_and_generate)
+  → Bedrock (Claude Opus 4.7, retrieve + converse)
   → Lambda (API handler, Python 3.11)
   → API Gateway HTTP API (POST /ask)
   → Streamlit frontend
@@ -30,7 +30,7 @@ python pipeline/parse_emails.py
 python pipeline/uploadtos3.py
 
 # Run frontend locally
-API_URL=https://<api-id>.execute-api.us-east-1.amazonaws.com/ask streamlit run frontend/app.py
+API_URL=https://<api-id>.execute-api.us-west-2.amazonaws.com/ask streamlit run frontend/app.py
 
 # Deploy Lambda
 cd backend && zip function.zip lambda_function.py
@@ -51,18 +51,17 @@ Subject: <subject>
 <body>
 ```
 
-**`pipeline/uploadtos3.py`** — uploads `data/parsed/` to `s3://enron-org-memory/emails/` using `ThreadPoolExecutor(64)` + `botocore.config.Config(max_pool_connections=64)`. Lists existing S3 keys at startup and skips already-uploaded files (idempotent reruns). Run from EC2 in `us-east-1` for multi-Gbps throughput; 500k PUTs from a home connection takes hours.
+**`pipeline/uploadtos3.py`** — uploads `data/parsed/` to `s3://enron-org-memory-data/emails/` using `ThreadPoolExecutor(64)` + `botocore.config.Config(max_pool_connections=64)`. Lists existing S3 keys at startup and skips already-uploaded files (idempotent reruns). Run from EC2 in `us-west-2` for multi-Gbps throughput; 500k PUTs from a home connection takes hours.
 
 ## Backend
 
 **`backend/lambda_function.py`** — receives `{"question": "..."}`, calls `bedrock-agent-runtime` `retrieve_and_generate` with the Knowledge Base ID, returns `{"answer": "...", "sources": [...]}`. Must include `Access-Control-Allow-Origin: *` header. Truncate source snippets to 500 chars.
 
 - Bedrock embedding model: `amazon.titan-embed-text-v2:0`
-- Generation model: `anthropic.claude-3-sonnet-20240229-v1:0`
-- Model ARN format: `arn:aws:bedrock:{region}::foundation-model/{model-id}`
+- Generation model: `us.amazon.nova-pro-v1:0` (cross-region inference profile)
 - Error codes: 429 on throttling, 504 on timeout, 500 on unknown
 
-Environment variables: `KB_ID`, `AWS_REGION` (us-east-1), `S3_BUCKET`.
+Environment variables: `KB_ID`, `AWS_REGION` (us-west-2), `S3_BUCKET`.
 
 ## Frontend
 
@@ -99,6 +98,6 @@ requests
 
 - OpenSearch Serverless collection creation: 10–20 min
 - Bedrock KB sync: ~30–60 min per 50k docs → full ~350k corpus = 3–7 hours
-- Bedrock `retrieve_and_generate` per query: 5–10 sec → Lambda timeout must be 30s
+- Bedrock `retrieve_and_generate` per query: 5–10 sec → Lambda timeout set to 60s
 - Parse pipeline (~500k rows): 5–15 min locally
 - S3 upload from EC2 (64-way concurrency): ~5–10 min; from home: hours

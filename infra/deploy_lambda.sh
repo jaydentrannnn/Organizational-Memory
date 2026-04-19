@@ -8,7 +8,7 @@
 #   KB_ID               Bedrock Knowledge Base ID (skip if USE_MOCK=1)
 # Optional:
 #   FUNCTION_NAME       default: enron-query
-#   AWS_REGION          default: us-east-1
+#   AWS_REGION          default: us-west-2
 #   MODEL_ID            default: anthropic.claude-3-sonnet-20240229-v1:0
 #   AGENT_ID / AGENT_ALIAS_ID  switches Lambda to Option B (agent invocation)
 #   USE_MOCK            "1" to deploy in mock mode
@@ -20,13 +20,13 @@
 set -euo pipefail
 
 FUNCTION_NAME="${FUNCTION_NAME:-enron-query}"
-REGION="${AWS_REGION:-us-east-1}"
-MODEL_ID="${MODEL_ID:-anthropic.claude-3-sonnet-20240229-v1:0}"
+REGION="${AWS_REGION:-us-west-2}"
+MODEL_ID="${MODEL_ID:-anthropic.claude-opus-4-7-v1}"
 USE_MOCK="${USE_MOCK:-0}"
 KB_ID="${KB_ID:-}"
 AGENT_ID="${AGENT_ID:-}"
 AGENT_ALIAS_ID="${AGENT_ALIAS_ID:-}"
-TIMEOUT="${TIMEOUT:-30}"
+TIMEOUT="${TIMEOUT:-60}"
 MEMORY="${MEMORY:-512}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

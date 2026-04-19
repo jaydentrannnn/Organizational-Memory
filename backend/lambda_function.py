@@ -16,9 +16,9 @@ Routing logic:
   profile constraints and works with any text model (Nova, Titan, Claude).
 
 Environment variables:
-    AWS_REGION         e.g. us-east-1 (Lambda sets this automatically)
+    AWS_REGION         e.g. us-west-2 (Lambda sets this automatically)
     KB_ID              Bedrock Knowledge Base ID
-    MODEL_ID           Model for generation. Default: us.amazon.nova-pro-v1:0
+    MODEL_ID           Model for generation. Default: anthropic.claude-opus-4-7-v1
     AGENT_ID           Bedrock Agent ID (Option B, optional)
     AGENT_ALIAS_ID     Bedrock Agent alias ID (Option B, optional)
     USE_MOCK           "1" to force mock responses (useful for local/dev)
@@ -42,7 +42,7 @@ from botocore.exceptions import ClientError, ReadTimeoutError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-REGION = os.environ.get("AWS_REGION", "us-east-1")
+REGION = os.environ.get("AWS_REGION", "us-west-2")
 KB_ID = os.environ.get("KB_ID", "").strip()
 MODEL_ID = os.environ.get("MODEL_ID", "us.amazon.nova-pro-v1:0").strip()
 AGENT_ID = os.environ.get("AGENT_ID", "").strip()
@@ -53,7 +53,7 @@ NUM_RESULTS = int(os.environ.get("NUM_RESULTS", "5"))
 
 _BOTO_CONFIG = Config(
     region_name=REGION,
-    read_timeout=25,
+    read_timeout=55,
     connect_timeout=5,
     retries={"max_attempts": 2, "mode": "standard"},
 )

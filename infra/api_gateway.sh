@@ -14,7 +14,7 @@ set -euo pipefail
 
 API_NAME="${API_NAME:-enron-memory-api}"
 FUNCTION_NAME="${FUNCTION_NAME:-enron-query}"
-REGION="${AWS_REGION:-us-east-1}"
+REGION="${AWS_REGION:-us-west-2}"
 ROUTE_KEY="${ROUTE_KEY:-POST /ask}"
 STATEMENT_ID="${STATEMENT_ID:-apigateway-invoke}"
 
