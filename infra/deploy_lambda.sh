@@ -21,7 +21,7 @@ set -euo pipefail
 
 FUNCTION_NAME="${FUNCTION_NAME:-enron-query}"
 REGION="${AWS_REGION:-us-west-2}"
-MODEL_ID="${MODEL_ID:-anthropic.claude-opus-4-7-v1}"
+MODEL_ID="${MODEL_ID:-us.amazon.nova-pro-v1:0}"
 USE_MOCK="${USE_MOCK:-0}"
 KB_ID="${KB_ID:-}"
 AGENT_ID="${AGENT_ID:-}"

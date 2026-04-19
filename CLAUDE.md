@@ -11,7 +11,7 @@ Hackathon project demonstrating "Organizational Memory" — passive ingestion of
 ```
 S3 (parsed .txt emails)
   → Bedrock Knowledge Base (Titan Embeddings v2 + OpenSearch Serverless vector store)
-  → Bedrock (Claude Opus 4.7, retrieve + converse)
+  → Bedrock (Nova Pro, retrieve + converse)
   → Lambda (API handler, Python 3.11)
   → API Gateway HTTP API (POST /ask)
   → Streamlit frontend

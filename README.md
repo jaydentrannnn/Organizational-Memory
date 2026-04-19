@@ -18,7 +18,7 @@ emails.csv → parse → S3 (248k .txt files)
               Bedrock Knowledge Base
               (Titan Embeddings v2 + OpenSearch Serverless)
                        ↓
-              Lambda (Claude Opus 4.7 via Converse API)
+              Lambda (Nova Pro via Converse API)
                        ↓
               API Gateway HTTP API (POST /ask)
                        ↓
@@ -30,7 +30,7 @@ emails.csv → parse → S3 (248k .txt files)
 - **S3** — parsed email storage (`enron-org-memory-data/emails/`)
 - **Amazon Bedrock Knowledge Bases** — RAG retrieval with Titan Embeddings v2
 - **OpenSearch Serverless** — vector store backing the Knowledge Base
-- **Amazon Bedrock** — answer generation via Claude Opus 4.7 (Converse API)
+- **Amazon Bedrock** — answer generation via Nova Pro (Converse API)
 - **Lambda** — API handler (Python 3.11, 60s timeout)
 - **API Gateway** — HTTP API with CORS
 - **EC2** — Streamlit hosting

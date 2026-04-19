@@ -18,7 +18,7 @@ Routing logic:
 Environment variables:
     AWS_REGION         e.g. us-west-2 (Lambda sets this automatically)
     KB_ID              Bedrock Knowledge Base ID
-    MODEL_ID           Model for generation. Default: anthropic.claude-opus-4-7-v1
+    MODEL_ID           Model for generation. Default: us.amazon.nova-pro-v1:0
     AGENT_ID           Bedrock Agent ID (Option B, optional)
     AGENT_ALIAS_ID     Bedrock Agent alias ID (Option B, optional)
     USE_MOCK           "1" to force mock responses (useful for local/dev)
