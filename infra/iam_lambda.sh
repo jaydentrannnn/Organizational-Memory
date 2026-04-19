@@ -52,7 +52,9 @@ INLINE_POLICY=$(cat <<'JSON'
         "bedrock:InvokeModelWithResponseStream",
         "bedrock:Retrieve",
         "bedrock:RetrieveAndGenerate",
-        "bedrock:InvokeAgent"
+        "bedrock:InvokeAgent",
+        "bedrock:GetInferenceProfile",
+        "bedrock:ListInferenceProfiles"
       ],
       "Resource": "*"
     },
