@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "routeKey": "POST /ask",
+  "rawPath": "/ask",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/ask"
+    }
+  },
+  "body": "{\"question\":\"Why did Enron use special purpose entities?\"}",
+  "isBase64Encoded": false
+}
